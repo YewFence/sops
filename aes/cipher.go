@@ -132,6 +132,8 @@ func (c Cipher) Decrypt(ciphertext string, key []byte, additionalData string) (p
 		plaintext = value
 	case "comment":
 		plaintext = sops.Comment{Value: decryptedValue}
+	case "comment_inline":
+		plaintext = sops.Comment{Value: decryptedValue, Inline: true}
 	default:
 		return nil, fmt.Errorf("Unknown datatype: %s", encryptedValue.datatype)
 	}
@@ -216,6 +218,9 @@ func (c Cipher) Encrypt(plaintext interface{}, key []byte, additionalData string
 		plainBytes, err = value.MarshalText()
 	case sops.Comment:
 		encryptedType = "comment"
+		if value.Inline {
+			encryptedType = "comment_inline"
+		}
 		plainBytes = []byte(value.Value)
 	default:
 		return "", fmt.Errorf("Value to encrypt has unsupported type %T", value)

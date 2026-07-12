@@ -186,6 +186,30 @@ func TestEncryptEmptyComment(t *testing.T) {
 	assert.Equal(t, "", s)
 }
 
+func TestRoundtripInlineComment(t *testing.T) {
+	key := []byte(strings.Repeat("f", 32))
+	expected := sops.Comment{Value: "inline", Inline: true}
+	cipher := NewCipher()
+	encrypted, err := cipher.Encrypt(expected, key, "comment")
+	assert.NoError(t, err)
+	parsed, err := parse(encrypted)
+	assert.NoError(t, err)
+	assert.Equal(t, "comment_inline", parsed.datatype)
+	decrypted, err := cipher.Decrypt(encrypted, key, "comment")
+	assert.NoError(t, err)
+	assert.Equal(t, expected, decrypted)
+
+	tree := sops.Tree{Branches: sops.TreeBranches{sops.TreeBranch{
+		{Key: "values", Value: []interface{}{expected, "value"}},
+	}}}
+	_, err = tree.Encrypt(key, cipher)
+	assert.NoError(t, err)
+	assert.IsType(t, "", tree.Branches[0][0].Value.([]interface{})[0])
+	_, err = tree.Decrypt(key, cipher)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, tree.Branches[0][0].Value.([]interface{})[0])
+}
+
 func TestDecryptEmptyValue(t *testing.T) {
 	key := []byte(strings.Repeat("f", 32))
 	s, err := NewCipher().Decrypt("", key, "")

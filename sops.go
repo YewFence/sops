@@ -414,6 +414,7 @@ func (branch TreeBranch) walkBranch(in TreeBranch, path []string, commentsStack 
 				return nil, err
 			}
 			if encComment, ok := enc.(Comment); ok {
+				encComment.Inline = c.Inline
 				in[i].Key = encComment
 				continue
 			} else if comment, ok := enc.(string); ok {
