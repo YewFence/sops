@@ -10,6 +10,7 @@ const (
 	Dotenv
 	Ini
 	Json
+	Toml
 	Yaml
 )
 
@@ -18,6 +19,7 @@ var stringToFormat = map[string]Format{
 	"dotenv": Dotenv,
 	"ini":    Ini,
 	"json":   Json,
+	"toml":   Toml,
 	"yaml":   Yaml,
 }
 
@@ -51,6 +53,11 @@ func IsIniFile(path string) bool {
 	return strings.HasSuffix(path, ".ini")
 }
 
+// IsTOMLFile returns true if a given file path corresponds to a TOML file
+func IsTOMLFile(path string) bool {
+	return strings.HasSuffix(path, ".toml")
+}
+
 // FormatForPath returns the correct format given the path to a file
 func FormatForPath(path string) Format {
 	format := Binary // default
@@ -62,6 +69,8 @@ func FormatForPath(path string) Format {
 		format = Dotenv
 	} else if IsIniFile(path) {
 		format = Ini
+	} else if IsTOMLFile(path) {
+		format = Toml
 	}
 	return format
 }
