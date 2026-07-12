@@ -3,6 +3,7 @@ package aes
 import (
 	"bytes"
 	"crypto/rand"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/getsops/sops/v3"
+	toml "github.com/pelletier/go-toml/v2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -139,6 +141,42 @@ func TestRoundtripTime(t *testing.T) {
 		}
 		assert.Equal(t, value, d)
 	}
+}
+
+func TestRoundtripTOMLScalarTypes(t *testing.T) {
+	var localDateTime toml.LocalDateTime
+	assert.NoError(t, localDateTime.UnmarshalText([]byte("1979-05-27T07:32:00")))
+	var localDate toml.LocalDate
+	assert.NoError(t, localDate.UnmarshalText([]byte("1979-05-27")))
+	var localTime toml.LocalTime
+	assert.NoError(t, localTime.UnmarshalText([]byte("07:32:00")))
+	values := []interface{}{
+		int64(-9223372036854775808),
+		int64(9223372036854775807),
+		localDateTime,
+		localDate,
+		localTime,
+	}
+	key := []byte(strings.Repeat("f", 32))
+	for _, value := range values {
+		cipher := NewCipher()
+		encrypted, err := cipher.Encrypt(value, key, "toml")
+		assert.NoError(t, err)
+		decrypted, err := cipher.Decrypt(encrypted, key, "toml")
+		assert.NoError(t, err)
+		assert.Equal(t, value, decrypted)
+	}
+	expected := sops.TreeBranch{}
+	for i, value := range values {
+		expected = append(expected, sops.TreeItem{Key: fmt.Sprintf("value_%d", i), Value: value})
+	}
+	tree := sops.Tree{Branches: sops.TreeBranches{append(sops.TreeBranch{}, expected...)}}
+	cipher := NewCipher()
+	_, err := tree.Encrypt(key, cipher)
+	assert.NoError(t, err)
+	_, err = tree.Decrypt(key, cipher)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, tree.Branches[0])
 }
 
 func TestEncryptEmptyComment(t *testing.T) {

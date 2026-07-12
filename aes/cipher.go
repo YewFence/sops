@@ -15,6 +15,7 @@ import (
 
 	"github.com/getsops/sops/v3"
 	"github.com/getsops/sops/v3/logging"
+	toml "github.com/pelletier/go-toml/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -105,6 +106,8 @@ func (c Cipher) Decrypt(ciphertext string, key []byte, additionalData string) (p
 		plaintext = decryptedValue
 	case "int":
 		plaintext, err = strconv.Atoi(decryptedValue)
+	case "int64":
+		plaintext, err = strconv.ParseInt(decryptedValue, 10, 64)
 	case "float":
 		plaintext, err = strconv.ParseFloat(decryptedValue, 64)
 	case "bytes":
@@ -113,6 +116,18 @@ func (c Cipher) Decrypt(ciphertext string, key []byte, additionalData string) (p
 		plaintext, err = strconv.ParseBool(decryptedValue)
 	case "time":
 		var value time.Time
+		err = value.UnmarshalText(decryptedBytes)
+		plaintext = value
+	case "toml_local_datetime":
+		var value toml.LocalDateTime
+		err = value.UnmarshalText(decryptedBytes)
+		plaintext = value
+	case "toml_local_date":
+		var value toml.LocalDate
+		err = value.UnmarshalText(decryptedBytes)
+		plaintext = value
+	case "toml_local_time":
+		var value toml.LocalTime
 		err = value.UnmarshalText(decryptedBytes)
 		plaintext = value
 	case "comment":
@@ -137,7 +152,7 @@ func isEmpty(value interface{}) bool {
 	}
 }
 
-// Encrypt takes one of (string, int, float, bool) and encrypts it with the provided key and additional auth data, returning a sops-format encrypted string.
+// Encrypt takes a supported scalar value and encrypts it with the provided key and additional auth data, returning a sops-format encrypted string.
 func (c Cipher) Encrypt(plaintext interface{}, key []byte, additionalData string) (ciphertext string, err error) {
 	if isEmpty(plaintext) {
 		return "", nil
@@ -169,6 +184,9 @@ func (c Cipher) Encrypt(plaintext interface{}, key []byte, additionalData string
 	case int:
 		encryptedType = "int"
 		plainBytes = []byte(strconv.Itoa(value))
+	case int64:
+		encryptedType = "int64"
+		plainBytes = []byte(strconv.FormatInt(value, 10))
 	case float64:
 		encryptedType = "float"
 		// The Python version encodes floats without padding 0s after the decimal point.
@@ -187,11 +205,23 @@ func (c Cipher) Encrypt(plaintext interface{}, key []byte, additionalData string
 		if err != nil {
 			return "", fmt.Errorf("Error marshaling timestamp %q: %w", value, err)
 		}
+	case toml.LocalDateTime:
+		encryptedType = "toml_local_datetime"
+		plainBytes, err = value.MarshalText()
+	case toml.LocalDate:
+		encryptedType = "toml_local_date"
+		plainBytes, err = value.MarshalText()
+	case toml.LocalTime:
+		encryptedType = "toml_local_time"
+		plainBytes, err = value.MarshalText()
 	case sops.Comment:
 		encryptedType = "comment"
 		plainBytes = []byte(value.Value)
 	default:
 		return "", fmt.Errorf("Value to encrypt has unsupported type %T", value)
+	}
+	if err != nil {
+		return "", fmt.Errorf("Error marshaling value %q: %w", plaintext, err)
 	}
 	out := gcm.Seal(nil, iv, plainBytes, []byte(additionalData))
 	return fmt.Sprintf("ENC[AES256_GCM,data:%s,iv:%s,tag:%s,type:%s]",

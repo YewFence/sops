@@ -2,6 +2,7 @@ package sops
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -13,6 +14,26 @@ import (
 	"github.com/getsops/sops/v3/hcvault"
 	"github.com/getsops/sops/v3/pgp"
 )
+
+type textMarshalerValue string
+
+func (value textMarshalerValue) MarshalText() ([]byte, error) {
+	if value == "error" {
+		return nil, errors.New("marshal error")
+	}
+	return []byte(value), nil
+}
+
+func TestToBytesSupportsInt64AndTextMarshalers(t *testing.T) {
+	bytes, err := ToBytes(int64(-9223372036854775808))
+	assert.NoError(t, err)
+	assert.Equal(t, "-9223372036854775808", string(bytes))
+	bytes, err = ToBytes(textMarshalerValue("1979-05-27"))
+	assert.NoError(t, err)
+	assert.Equal(t, "1979-05-27", string(bytes))
+	_, err = ToBytes(textMarshalerValue("error"))
+	assert.EqualError(t, err, "marshal error")
+}
 
 type reverseCipher struct{}
 

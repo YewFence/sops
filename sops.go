@@ -39,6 +39,7 @@ package sops // import "github.com/getsops/sops/v3"
 import (
 	"crypto/rand"
 	"crypto/sha512"
+	"encoding"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -344,11 +345,15 @@ func (branch TreeBranch) walkValue(in interface{}, path []string, commentsStack 
 		return onLeaves(string(in), path, commentsStack)
 	case int:
 		return onLeaves(in, path, commentsStack)
+	case int64:
+		return onLeaves(in, path, commentsStack)
 	case bool:
 		return onLeaves(in, path, commentsStack)
 	case float64:
 		return onLeaves(in, path, commentsStack)
 	case time.Time:
+		return onLeaves(in, path, commentsStack)
+	case encoding.TextMarshaler:
 		return onLeaves(in, path, commentsStack)
 	case Comment:
 		return onLeaves(in, path, commentsStack)
@@ -983,6 +988,8 @@ func ToBytes(in interface{}) ([]byte, error) {
 		return []byte(in), nil
 	case int:
 		return []byte(strconv.Itoa(in)), nil
+	case int64:
+		return []byte(strconv.FormatInt(in, 10)), nil
 	case float64:
 		return []byte(strconv.FormatFloat(in, 'f', -1, 64)), nil
 	case bool:
@@ -994,6 +1001,8 @@ func ToBytes(in interface{}) ([]byte, error) {
 	case []byte:
 		return in, nil
 	case time.Time:
+		return in.MarshalText()
+	case encoding.TextMarshaler:
 		return in.MarshalText()
 	case Comment:
 		return ToBytes(in.Value)
