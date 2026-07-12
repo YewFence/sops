@@ -157,7 +157,7 @@ func (state *parseState) setTableScope(path []string) *branchRef {
 	return scope
 }
 
-func (state *parseState) setArrayTableScope(path []string) *branchRef {
+func (state *parseState) setArrayTableScope(path []string, leadingComments []sops.Comment) *branchRef {
 	parent := state.root
 	for _, key := range path[:len(path)-1] {
 		parent = state.navigateForSection(parent, key)
@@ -170,12 +170,16 @@ func (state *parseState) setArrayTableScope(path []string) *branchRef {
 		}
 		if array, ok := parent.items[i].Value.([]any); ok {
 			scope := &branchRef{}
+			for _, comment := range leadingComments {
+				array = append(array, comment)
+			}
 			parent.items[i].Value = append(array, scope)
 			state.scope = scope
 			return scope
 		}
 		break
 	}
+	appendComments(parent, leadingComments)
 	scope := &branchRef{}
 	parent.items = append(parent.items, sops.TreeItem{Key: key, Value: []any{scope}})
 	state.scope = scope
@@ -233,9 +237,8 @@ func parseTOML(data []byte) (sops.TreeBranch, error) {
 			if err != nil {
 				return nil, err
 			}
-			appendComments(state.parentForSection(path), pendingComments)
+			scope := state.setArrayTableScope(path, pendingComments)
 			pendingComments = pendingComments[:0]
-			scope := state.setArrayTableScope(path)
 			appendComments(scope, commentsFromSiblings(data, node.Next()))
 		}
 	}

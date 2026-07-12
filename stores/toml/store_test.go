@@ -133,8 +133,10 @@ x = 1
 y = 2
 [a.d]
 z = 3
+# servers
 [[servers]] # first server
 name = "one"
+# second element
 [[servers]] # second server
 name = "two"
 [[servers.features]]
@@ -154,11 +156,13 @@ enabled = true
 		{Key: "a", Value: sops.TreeBranch{
 			{Key: "d", Value: sops.TreeBranch{{Key: "z", Value: int64(3)}}},
 		}},
+		{Key: sops.Comment{Value: "servers"}},
 		{Key: "servers", Value: []any{
 			sops.TreeBranch{
 				{Key: sops.Comment{Value: "first server", Inline: true}},
 				{Key: "name", Value: "one"},
 			},
+			sops.Comment{Value: "second element"},
 			sops.TreeBranch{
 				{Key: sops.Comment{Value: "second server", Inline: true}},
 				{Key: "name", Value: "two"},
