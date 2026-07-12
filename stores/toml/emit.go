@@ -159,6 +159,12 @@ func (emitter *documentEmitter) emitArrayOfTables(path []string, values []any, l
 		switch value := value.(type) {
 		case sops.Comment:
 			pending = append(pending, value)
+		case string:
+			comment, ok := encryptedComment(value)
+			if !ok {
+				return fmt.Errorf("array of tables %q contains %T", strings.Join(path, "."), value)
+			}
+			pending = append(pending, comment)
 		case sops.TreeBranch:
 			if err := emitter.emitTable(path, value, pending, nil, true); err != nil {
 				return err
@@ -259,15 +265,32 @@ func isSection(value any) bool {
 func isArrayOfTables(values []any) bool {
 	hasTable := false
 	for _, value := range values {
-		switch value.(type) {
+		switch value := value.(type) {
 		case sops.Comment:
 		case sops.TreeBranch:
 			hasTable = true
+		case string:
+			if _, ok := encryptedComment(value); !ok {
+				return false
+			}
 		default:
 			return false
 		}
 	}
 	return hasTable
+}
+
+func encryptedComment(value string) (sops.Comment, bool) {
+	if !strings.HasPrefix(value, "ENC[") {
+		return sops.Comment{}, false
+	}
+	if strings.HasSuffix(value, ",type:comment]") {
+		return sops.Comment{Value: value}, true
+	}
+	if strings.HasSuffix(value, ",type:comment_inline]") {
+		return sops.Comment{Value: value, Inline: true}, true
+	}
+	return sops.Comment{}, false
 }
 
 func appendPath(path []string, key string) []string {

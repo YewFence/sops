@@ -135,6 +135,28 @@ func TestEmitPlainFileNormalizesBranchesAndArraysOfTables(t *testing.T) {
 	assert.Equal(t, string(out), string(second))
 }
 
+func TestEmitPlainFileKeepsEncryptedArrayTableCommentsInPlace(t *testing.T) {
+	encryptedComment := "ENC[AES256_GCM,data:YQ==,iv:Yg==,tag:Yw==,type:comment]"
+	branches := sops.TreeBranches{sops.TreeBranch{
+		{Key: "service", Value: sops.TreeBranch{{Key: "name", Value: "api"}}},
+		{Key: "servers", Value: []any{
+			sops.TreeBranch{{Key: "name", Value: "one"}},
+			encryptedComment,
+			sops.TreeBranch{{Key: "name", Value: "two"}},
+		}},
+	}}
+	store := &Store{}
+	out, err := store.EmitPlainFile(branches)
+	require.NoError(t, err)
+	text := string(out)
+	assert.Less(t, strings.Index(text, "[service]"), strings.Index(text, "[[servers]]"))
+	assert.Contains(t, text, "# "+encryptedComment+"\n[[servers]]")
+	loaded, err := store.LoadPlainFile(out)
+	require.NoError(t, err)
+	servers := loaded[0][1].Value.([]any)
+	assert.Equal(t, sops.Comment{Value: encryptedComment}, servers[1])
+}
+
 func TestEmitValue(t *testing.T) {
 	store := &Store{}
 	tests := []struct {
