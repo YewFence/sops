@@ -35,83 +35,83 @@ const (
 // in order to allow the binary format to stay backwards compatible over time, but at the same time allow the internal
 // representation SOPS uses to change over time.
 type metadata struct {
-	ShamirThreshold           int         `mapstructure:"shamir_threshold,omitempty"`
-	KeyGroups                 []keygroup  `mapstructure:"key_groups,omitempty,deep"`
-	KMSKeys                   []kmskey    `mapstructure:"kms,omitempty,deep"`
-	GCPKMSKeys                []gcpkmskey `mapstructure:"gcp_kms,omitempty,deep"`
-	HCKmsKeys                 []hckmskey  `mapstructure:"hckms,omitempty,deep"`
-	AzureKeyVaultKeys         []azkvkey   `mapstructure:"azure_kv,omitempty,deep"`
-	VaultKeys                 []vaultkey  `mapstructure:"hc_vault,omitempty,deep"`
-	AgeKeys                   []agekey    `mapstructure:"age,omitempty,deep"`
-	LastModified              string      `mapstructure:"lastmodified"`
-	MessageAuthenticationCode string      `mapstructure:"mac"`
-	PGPKeys                   []pgpkey    `mapstructure:"pgp,omitempty,deep"`
-	UnencryptedSuffix         string      `mapstructure:"unencrypted_suffix,omitempty"`
-	EncryptedSuffix           string      `mapstructure:"encrypted_suffix,omitempty"`
-	UnencryptedRegex          string      `mapstructure:"unencrypted_regex,omitempty"`
-	EncryptedRegex            string      `mapstructure:"encrypted_regex,omitempty"`
-	UnencryptedCommentRegex   string      `mapstructure:"unencrypted_comment_regex,omitempty"`
-	EncryptedCommentRegex     string      `mapstructure:"encrypted_comment_regex,omitempty"`
-	MACOnlyEncrypted          bool        `mapstructure:"mac_only_encrypted,omitempty"`
-	Version                   string      `mapstructure:"version"`
+	ShamirThreshold           int         `mapstructure:"shamir_threshold,omitempty" toml:"shamir_threshold,omitempty"`
+	KeyGroups                 []keygroup  `mapstructure:"key_groups,omitempty,deep" toml:"key_groups,omitempty"`
+	KMSKeys                   []kmskey    `mapstructure:"kms,omitempty,deep" toml:"kms,omitempty"`
+	GCPKMSKeys                []gcpkmskey `mapstructure:"gcp_kms,omitempty,deep" toml:"gcp_kms,omitempty"`
+	HCKmsKeys                 []hckmskey  `mapstructure:"hckms,omitempty,deep" toml:"hckms,omitempty"`
+	AzureKeyVaultKeys         []azkvkey   `mapstructure:"azure_kv,omitempty,deep" toml:"azure_kv,omitempty"`
+	VaultKeys                 []vaultkey  `mapstructure:"hc_vault,omitempty,deep" toml:"hc_vault,omitempty"`
+	AgeKeys                   []agekey    `mapstructure:"age,omitempty,deep" toml:"age,omitempty"`
+	LastModified              string      `mapstructure:"lastmodified" toml:"lastmodified"`
+	MessageAuthenticationCode string      `mapstructure:"mac" toml:"mac"`
+	PGPKeys                   []pgpkey    `mapstructure:"pgp,omitempty,deep" toml:"pgp,omitempty"`
+	UnencryptedSuffix         string      `mapstructure:"unencrypted_suffix,omitempty" toml:"unencrypted_suffix,omitempty"`
+	EncryptedSuffix           string      `mapstructure:"encrypted_suffix,omitempty" toml:"encrypted_suffix,omitempty"`
+	UnencryptedRegex          string      `mapstructure:"unencrypted_regex,omitempty" toml:"unencrypted_regex,omitempty"`
+	EncryptedRegex            string      `mapstructure:"encrypted_regex,omitempty" toml:"encrypted_regex,omitempty"`
+	UnencryptedCommentRegex   string      `mapstructure:"unencrypted_comment_regex,omitempty" toml:"unencrypted_comment_regex,omitempty"`
+	EncryptedCommentRegex     string      `mapstructure:"encrypted_comment_regex,omitempty" toml:"encrypted_comment_regex,omitempty"`
+	MACOnlyEncrypted          bool        `mapstructure:"mac_only_encrypted,omitempty" toml:"mac_only_encrypted,omitempty"`
+	Version                   string      `mapstructure:"version" toml:"version"`
 }
 
 type keygroup struct {
-	PGPKeys           []pgpkey    `mapstructure:"pgp,omitempty,deep"`
-	KMSKeys           []kmskey    `mapstructure:"kms,omitempty,deep"`
-	GCPKMSKeys        []gcpkmskey `mapstructure:"gcp_kms,omitempty,deep"`
-	HCKmsKeys         []hckmskey  `mapstructure:"hckms,omitempty,deep"`
-	AzureKeyVaultKeys []azkvkey   `mapstructure:"azure_kv,omitempty,deep"`
-	VaultKeys         []vaultkey  `mapstructure:"hc_vault,deep"`
-	AgeKeys           []agekey    `mapstructure:"age,deep"`
+	PGPKeys           []pgpkey    `mapstructure:"pgp,omitempty,deep" toml:"pgp,omitempty"`
+	KMSKeys           []kmskey    `mapstructure:"kms,omitempty,deep" toml:"kms,omitempty"`
+	GCPKMSKeys        []gcpkmskey `mapstructure:"gcp_kms,omitempty,deep" toml:"gcp_kms,omitempty"`
+	HCKmsKeys         []hckmskey  `mapstructure:"hckms,omitempty,deep" toml:"hckms,omitempty"`
+	AzureKeyVaultKeys []azkvkey   `mapstructure:"azure_kv,omitempty,deep" toml:"azure_kv,omitempty"`
+	VaultKeys         []vaultkey  `mapstructure:"hc_vault,deep" toml:"hc_vault"`
+	AgeKeys           []agekey    `mapstructure:"age,deep" toml:"age"`
 }
 
 type pgpkey struct {
-	CreatedAt        string `mapstructure:"created_at"`
-	EncryptedDataKey string `mapstructure:"enc"`
-	Fingerprint      string `mapstructure:"fp"`
+	CreatedAt        string `mapstructure:"created_at" toml:"created_at"`
+	EncryptedDataKey string `mapstructure:"enc" toml:"enc"`
+	Fingerprint      string `mapstructure:"fp" toml:"fp"`
 }
 
 type kmskey struct {
-	Arn              string             `mapstructure:"arn"`
-	Role             string             `mapstructure:"role,omitempty"`
-	Context          map[string]*string `mapstructure:"context,omitempty"`
-	CreatedAt        string             `mapstructure:"created_at"`
-	EncryptedDataKey string             `mapstructure:"enc"`
-	AwsProfile       string             `mapstructure:"aws_profile"`
+	Arn              string             `mapstructure:"arn" toml:"arn"`
+	Role             string             `mapstructure:"role,omitempty" toml:"role,omitempty"`
+	Context          map[string]*string `mapstructure:"context,omitempty" toml:"context,omitempty"`
+	CreatedAt        string             `mapstructure:"created_at" toml:"created_at"`
+	EncryptedDataKey string             `mapstructure:"enc" toml:"enc"`
+	AwsProfile       string             `mapstructure:"aws_profile" toml:"aws_profile"`
 }
 
 type gcpkmskey struct {
-	ResourceID       string `mapstructure:"resource_id"`
-	CreatedAt        string `mapstructure:"created_at"`
-	EncryptedDataKey string `mapstructure:"enc"`
+	ResourceID       string `mapstructure:"resource_id" toml:"resource_id"`
+	CreatedAt        string `mapstructure:"created_at" toml:"created_at"`
+	EncryptedDataKey string `mapstructure:"enc" toml:"enc"`
 }
 
 type vaultkey struct {
-	VaultAddress     string `mapstructure:"vault_address"`
-	EnginePath       string `mapstructure:"engine_path"`
-	KeyName          string `mapstructure:"key_name"`
-	CreatedAt        string `mapstructure:"created_at"`
-	EncryptedDataKey string `mapstructure:"enc"`
+	VaultAddress     string `mapstructure:"vault_address" toml:"vault_address"`
+	EnginePath       string `mapstructure:"engine_path" toml:"engine_path"`
+	KeyName          string `mapstructure:"key_name" toml:"key_name"`
+	CreatedAt        string `mapstructure:"created_at" toml:"created_at"`
+	EncryptedDataKey string `mapstructure:"enc" toml:"enc"`
 }
 
 type azkvkey struct {
-	VaultURL         string `mapstructure:"vault_url"`
-	Name             string `mapstructure:"name"`
-	Version          string `mapstructure:"version"`
-	CreatedAt        string `mapstructure:"created_at"`
-	EncryptedDataKey string `mapstructure:"enc"`
+	VaultURL         string `mapstructure:"vault_url" toml:"vault_url"`
+	Name             string `mapstructure:"name" toml:"name"`
+	Version          string `mapstructure:"version" toml:"version"`
+	CreatedAt        string `mapstructure:"created_at" toml:"created_at"`
+	EncryptedDataKey string `mapstructure:"enc" toml:"enc"`
 }
 
 type agekey struct {
-	Recipient        string `mapstructure:"recipient"`
-	EncryptedDataKey string `mapstructure:"enc"`
+	Recipient        string `mapstructure:"recipient" toml:"recipient"`
+	EncryptedDataKey string `mapstructure:"enc" toml:"enc"`
 }
 
 type hckmskey struct {
-	KeyID            string `mapstructure:"key_id"`
-	CreatedAt        string `mapstructure:"created_at"`
-	EncryptedDataKey string `mapstructure:"enc"`
+	KeyID            string `mapstructure:"key_id" toml:"key_id"`
+	CreatedAt        string `mapstructure:"created_at" toml:"created_at"`
+	EncryptedDataKey string `mapstructure:"enc" toml:"enc"`
 }
 
 // metadataFromInternal converts an internal SOPS metadata representation to a

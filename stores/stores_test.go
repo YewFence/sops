@@ -1,11 +1,36 @@
 package stores
 
 import (
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMetadataTypesHaveTOMLTags(t *testing.T) {
+	types := []reflect.Type{
+		reflect.TypeOf(metadata{}),
+		reflect.TypeOf(keygroup{}),
+		reflect.TypeOf(pgpkey{}),
+		reflect.TypeOf(kmskey{}),
+		reflect.TypeOf(gcpkmskey{}),
+		reflect.TypeOf(vaultkey{}),
+		reflect.TypeOf(azkvkey{}),
+		reflect.TypeOf(agekey{}),
+		reflect.TypeOf(hckmskey{}),
+	}
+	for _, typ := range types {
+		for i := 0; i < typ.NumField(); i++ {
+			field := typ.Field(i)
+			mapstructureName := strings.Split(field.Tag.Get("mapstructure"), ",")[0]
+			tomlName := strings.Split(field.Tag.Get("toml"), ",")[0]
+			assert.NotEmpty(t, tomlName, "%s.%s is missing a TOML tag", typ.Name(), field.Name)
+			assert.Equal(t, mapstructureName, tomlName, "%s.%s has mismatched serialization tags", typ.Name(), field.Name)
+		}
+	}
+}
 
 func TestValToString(t *testing.T) {
 	assert.Equal(t, "1", ValToString(1))

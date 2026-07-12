@@ -44,6 +44,11 @@ func TestFindConfigFileCurrentDir(t *testing.T) {
 	assert.Equal(t, expectedPath, filepath)
 }
 
+func TestNewStoresConfigIncludesTOML(t *testing.T) {
+	storesConfig := NewStoresConfig()
+	assert.Equal(t, TOMLStoreConfig{}, storesConfig.TOML)
+}
+
 var sampleConfig = []byte(`
 creation_rules:
   - path_regex: foobar*
