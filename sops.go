@@ -1,5 +1,5 @@
 /*
-Package sops manages JSON, YAML and BINARY documents to be encrypted or decrypted.
+Package sops manages JSON, YAML, TOML, and BINARY documents to be encrypted or decrypted.
 
 This package should not be used directly. Instead, Sops users should install the
 command line client via `go get -u github.com/getsops/sops/v3/cmd/sops`, or use the
@@ -10,8 +10,8 @@ We do not guarantee API stability for any package other than `github.com/getsops
 A Sops document is a Tree composed of a data branch with arbitrary key/value pairs
 and a metadata branch with encryption and integrity information.
 
-In JSON and YAML formats, the structure of the cleartext tree is preserved, keys are
-stored in cleartext and only values are encrypted. Keeping the keys in cleartext
+In JSON, YAML, and TOML formats, the structure of the cleartext tree is preserved,
+keys are stored in cleartext and only values are encrypted. Keeping the keys in cleartext
 provides better readability when storing Sops documents in version controls, and allows
 for merging competing changes on documents. This is a major difference between Sops
 and other encryption tools that store documents as encrypted blobs.

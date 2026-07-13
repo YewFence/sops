@@ -26,6 +26,15 @@ Project changes:
 * Rust dependency updates for functional tests
   ([#2259](https://github.com/getsops/sops/pull/2259)).
 
+## Unreleased
+
+Improvements:
+
+* Add native TOML 1.1 support, including automatic `.toml` detection,
+  encryption metadata, ordered tables and arrays of tables, comments, TOML
+  datetime types, format conversion, and the standard SOPS CLI workflows
+  ([#369](https://github.com/getsops/sops/issues/369)).
+
 ## 3.13.2
 
 Improvements:
