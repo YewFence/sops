@@ -1038,6 +1038,25 @@ func encodeValueForMap(v interface{}) (interface{}, error) {
 	switch v := v.(type) {
 	case TreeBranch:
 		return EmitAsMap([]TreeBranch{v})
+	case []interface{}:
+		values := make([]interface{}, 0, len(v))
+		for _, value := range v {
+			if _, ok := value.(Comment); ok {
+				continue
+			}
+			encoded, err := encodeValueForMap(value)
+			if err != nil {
+				return nil, err
+			}
+			values = append(values, encoded)
+		}
+		return values, nil
+	case encoding.TextMarshaler:
+		text, err := v.MarshalText()
+		if err != nil {
+			return nil, err
+		}
+		return string(text), nil
 	default:
 		return v, nil
 	}

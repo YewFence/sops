@@ -64,6 +64,33 @@ local_time = 07:32:00
 	assert.Equal(t, expectedLocalTime, branch[14].Value)
 }
 
+func TestLoadPlainFileEmitsPublishableMap(t *testing.T) {
+	branches, err := (&Store{}).LoadPlainFile([]byte(`local_datetime = 1979-05-27T07:32:00
+local_date = 1979-05-27
+local_time = 07:32:00
+
+[[servers]]
+name = "one"
+
+# second server
+[[servers]]
+name = "two"
+`))
+	require.NoError(t, err)
+
+	data, err := sops.EmitAsMap(branches)
+	require.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{
+		"local_datetime": "1979-05-27T07:32:00",
+		"local_date":     "1979-05-27",
+		"local_time":     "07:32:00",
+		"servers": []interface{}{
+			map[string]interface{}{"name": "one"},
+			map[string]interface{}{"name": "two"},
+		},
+	}, data)
+}
+
 func TestLoadPlainFilePreservesComments(t *testing.T) {
 	input := []byte(`# root comment
 root = 1 # root inline

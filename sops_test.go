@@ -1525,9 +1525,20 @@ func TestEmitAsMap(t *testing.T) {
 	expected := map[string]interface{}{
 		"foobar": "barfoo",
 		"number": 42,
+		"date":   "1979-05-27",
 		"foo": map[string]interface{}{
 			"bar": map[string]interface{}{
 				"baz": "foobar",
+			},
+		},
+		"servers": []interface{}{
+			map[string]interface{}{
+				"name": "one",
+			},
+			[]interface{}{
+				map[string]interface{}{
+					"name": "nested",
+				},
 			},
 		},
 	}
@@ -1542,8 +1553,32 @@ func TestEmitAsMap(t *testing.T) {
 				Value: 42,
 			},
 			TreeItem{
+				Key:   "date",
+				Value: textMarshalerValue("1979-05-27"),
+			},
+			TreeItem{
 				Key:   Comment{Value: "comment"},
 				Value: nil,
+			},
+			TreeItem{
+				Key: "servers",
+				Value: []interface{}{
+					TreeBranch{
+						TreeItem{
+							Key:   "name",
+							Value: "one",
+						},
+					},
+					Comment{Value: "second server"},
+					[]interface{}{
+						TreeBranch{
+							TreeItem{
+								Key:   "name",
+								Value: "nested",
+							},
+						},
+					},
+				},
 			},
 		},
 		TreeBranch{
@@ -1568,6 +1603,21 @@ func TestEmitAsMap(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, data)
+}
+
+func TestEmitAsMapReturnsTextMarshalerError(t *testing.T) {
+	branches := TreeBranches{
+		TreeBranch{
+			TreeItem{
+				Key:   "date",
+				Value: textMarshalerValue("error"),
+			},
+		},
+	}
+
+	_, err := EmitAsMap(branches)
+
+	assert.EqualError(t, err, "marshal error")
 }
 
 func TestSortKeyGroupIndices(t *testing.T) {
