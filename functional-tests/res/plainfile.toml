@@ -1,0 +1,18 @@
+# application settings
+title = "TOML workflow"
+version = 1
+released = 2026-07-13T05:00:00Z
+values = [1, 2, 3]
+
+# service settings
+[service] # primary service
+host = "127.0.0.1"
+port = 8080 # public port
+enabled = true
+
+[[servers]]
+name = "one"
+
+# second server
+[[servers]]
+name = "two"

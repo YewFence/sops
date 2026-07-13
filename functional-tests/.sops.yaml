@@ -28,6 +28,10 @@ destination_rules:
       vault_kv_mount_name: "secret/"
       vault_kv_version: 2
       path_regex: test_encrypt_publish_vault.json
+    - vault_path: "functional-test/"
+      vault_kv_mount_name: "secret/"
+      vault_kv_version: 2
+      path_regex: test_encrypt_publish_vault.toml
     - vault_path: "functional-test-version-1/"
       vault_kv_mount_name: "kv/"
       vault_kv_version: 1

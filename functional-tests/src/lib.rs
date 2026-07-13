@@ -16,7 +16,7 @@ mod tests {
     use std::fs::File;
     use std::io::{BufWriter, Read, Write};
     use std::path::Path;
-    use std::process::{Child, Command, Stdio};
+    use std::process::{Child, Command, Output, Stdio};
     use tempfile::Builder;
     use tempfile::TempDir;
     const SOPS_BINARY_PATH: &'static str = "./sops";
@@ -49,6 +49,187 @@ mod tests {
             .write_all(&contents)
             .expect("Error writing to temporary file");
         file_path.to_string_lossy().into_owned()
+    }
+
+    fn assert_success(output: &Output) {
+        assert!(
+            output.status.success(),
+            "command failed\nstdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    #[test]
+    fn toml_cli_workflows() {
+        let file_path = prepare_temp_file(
+            "test_toml_cli_workflows.toml",
+            include_bytes!("../res/plainfile.toml"),
+        );
+
+        let status = Command::new(SOPS_BINARY_PATH)
+            .arg("filestatus")
+            .arg(file_path.clone())
+            .output()
+            .expect("Error checking plaintext TOML status");
+        assert_success(&status);
+        let status_json: serde_json::Value =
+            serde_json::from_slice(&status.stdout).expect("Invalid filestatus JSON");
+        assert_eq!(status_json["encrypted"], false);
+
+        let encrypted = Command::new(SOPS_BINARY_PATH)
+            .arg("encrypt")
+            .arg("--in-place")
+            .arg(file_path.clone())
+            .output()
+            .expect("Error encrypting TOML");
+        assert_success(&encrypted);
+        let mut encrypted_text = String::new();
+        File::open(file_path.clone())
+            .unwrap()
+            .read_to_string(&mut encrypted_text)
+            .unwrap();
+        assert!(encrypted_text.contains("[sops]"));
+        assert!(encrypted_text.contains("ENC[AES256_GCM"));
+
+        let status = Command::new(SOPS_BINARY_PATH)
+            .arg("filestatus")
+            .arg(file_path.clone())
+            .output()
+            .expect("Error checking encrypted TOML status");
+        assert_success(&status);
+        let status_json: serde_json::Value =
+            serde_json::from_slice(&status.stdout).expect("Invalid filestatus JSON");
+        assert_eq!(status_json["encrypted"], true);
+
+        let set = Command::new(SOPS_BINARY_PATH)
+            .arg("set")
+            .arg(file_path.clone())
+            .arg(r#"["service"]["port"]"#)
+            .arg("9090")
+            .output()
+            .expect("Error setting TOML value");
+        assert_success(&set);
+
+        let unset = Command::new(SOPS_BINARY_PATH)
+            .arg("unset")
+            .arg(file_path.clone())
+            .arg(r#"["service"]["enabled"]"#)
+            .output()
+            .expect("Error unsetting TOML value");
+        assert_success(&unset);
+
+        let edit = Command::new(SOPS_BINARY_PATH)
+            .arg("edit")
+            .arg(file_path.clone())
+            .env("SOPS_EDITOR", "sed -i 's/port = 9090/port = 9191/'")
+            .output()
+            .expect("Error editing TOML");
+        assert_success(&edit);
+
+        let rotate = Command::new(SOPS_BINARY_PATH)
+            .arg("rotate")
+            .arg("--in-place")
+            .arg(file_path.clone())
+            .output()
+            .expect("Error rotating TOML data key");
+        assert_success(&rotate);
+
+        let updatekeys = Command::new(SOPS_BINARY_PATH)
+            .arg("updatekeys")
+            .arg("--yes")
+            .arg(file_path.clone())
+            .output()
+            .expect("Error updating TOML keys");
+        assert_success(&updatekeys);
+
+        let decrypted_json = Command::new(SOPS_BINARY_PATH)
+            .arg("decrypt")
+            .arg("--output-type")
+            .arg("json")
+            .arg(file_path.clone())
+            .output()
+            .expect("Error decrypting TOML to JSON");
+        assert_success(&decrypted_json);
+        let data: serde_json::Value =
+            serde_json::from_slice(&decrypted_json.stdout).expect("Invalid decrypted JSON");
+        assert_eq!(data["title"], "TOML workflow");
+        assert_eq!(data["service"]["port"], 9191);
+        assert!(data["service"].get("enabled").is_none());
+        assert_eq!(data["servers"][0]["name"], "one");
+        assert_eq!(data["servers"][1]["name"], "two");
+
+        let decrypted_toml = Command::new(SOPS_BINARY_PATH)
+            .arg("decrypt")
+            .arg(file_path.clone())
+            .output()
+            .expect("Error decrypting TOML");
+        assert_success(&decrypted_toml);
+        let decrypted_text = String::from_utf8_lossy(&decrypted_toml.stdout);
+        assert!(decrypted_text.contains("# application settings"));
+        assert!(decrypted_text.contains("[service] # primary service"));
+        assert!(decrypted_text.contains("port = 9191.0 # public port"));
+        assert!(
+            decrypted_text.find("[[servers]]").unwrap()
+                < decrypted_text.rfind("[[servers]]").unwrap()
+        );
+
+        let decrypt_in_place = Command::new(SOPS_BINARY_PATH)
+            .arg("decrypt")
+            .arg("--in-place")
+            .arg(file_path.clone())
+            .output()
+            .expect("Error decrypting TOML in place");
+        assert_success(&decrypt_in_place);
+        let mut plaintext = String::new();
+        File::open(file_path)
+            .unwrap()
+            .read_to_string(&mut plaintext)
+            .unwrap();
+        assert!(!plaintext.contains("[sops]"));
+        assert!(plaintext.contains("port = 9191.0 # public port"));
+    }
+
+    #[test]
+    fn toml_stdin_and_explicit_format_conversion() {
+        let process = Command::new(SOPS_BINARY_PATH)
+            .arg("encrypt")
+            .arg("--input-type")
+            .arg("toml")
+            .arg("--output-type")
+            .arg("json")
+            .arg("--filename-override")
+            .arg("test_toml_stdin.toml")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Error encrypting TOML from stdin");
+        write_to_stdin(&process, b"name = \"stdin\"\nnumber = 7\n");
+        let encrypted = process.wait_with_output().expect("Failed to wait on sops");
+        assert_success(&encrypted);
+        let encrypted_json: serde_json::Value =
+            serde_json::from_slice(&encrypted.stdout).expect("Invalid encrypted JSON");
+        assert!(encrypted_json["name"].as_str().unwrap().starts_with("ENC["));
+        assert!(encrypted_json["number"]
+            .as_str()
+            .unwrap()
+            .starts_with("ENC["));
+        assert!(encrypted_json.get("sops").is_some());
+
+        let encrypted_path = prepare_temp_file("test_toml_stdin.json", &encrypted.stdout);
+        let decrypted = Command::new(SOPS_BINARY_PATH)
+            .arg("decrypt")
+            .arg("--input-type")
+            .arg("json")
+            .arg("--output-type")
+            .arg("toml")
+            .arg(encrypted_path)
+            .output()
+            .expect("Error converting encrypted JSON to TOML");
+        assert_success(&decrypted);
+        let toml = String::from_utf8_lossy(&decrypted.stdout);
+        assert!(toml.contains("name = 'stdin'"));
+        assert!(toml.contains("number = 7"));
     }
 
     #[test]
@@ -191,6 +372,44 @@ bar: baz
         );
 
         //TODO: Check that file exists in Vault
+    }
+
+    #[test]
+    fn publish_toml_file_vault() {
+        let file_path = prepare_temp_file(
+            "test_encrypt_publish_vault.toml",
+            b"local_datetime = 1979-05-27T07:32:00\n\n[[servers]]\nname = 'one'\n\n[[servers]]\nname = 'two'\n",
+        );
+        let encrypted = Command::new(SOPS_BINARY_PATH)
+            .arg("encrypt")
+            .arg("-i")
+            .arg(file_path.clone())
+            .output()
+            .expect("Error encrypting TOML for Vault");
+        assert_success(&encrypted);
+
+        let published = Command::new(SOPS_BINARY_PATH)
+            .arg("publish")
+            .arg("--yes")
+            .arg(file_path)
+            .output()
+            .expect("Error publishing TOML to Vault");
+        assert_success(&published);
+
+        let stored = Command::new("vault")
+            .arg("kv")
+            .arg("get")
+            .arg("-format=json")
+            .arg("secret/functional-test/test_encrypt_publish_vault.toml")
+            .output()
+            .expect("Error reading published TOML from Vault");
+        assert_success(&stored);
+        let secret: serde_json::Value =
+            serde_json::from_slice(&stored.stdout).expect("Invalid Vault response JSON");
+        let data = &secret["data"]["data"];
+        assert_eq!(data["local_datetime"], "1979-05-27T07:32:00");
+        assert_eq!(data["servers"][0]["name"], "one");
+        assert_eq!(data["servers"][1]["name"], "two");
     }
 
     #[test]
