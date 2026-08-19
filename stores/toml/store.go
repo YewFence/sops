@@ -218,11 +218,15 @@ func parseTOML(data []byte) (sops.TreeBranch, error) {
 			if err != nil {
 				return nil, err
 			}
+			trailingComments := commentsFromSiblings(data, node.Next())
+			if node.Value().Kind == unstable.InlineTable {
+				value, trailingComments = attachInlineTableHeaderComments(value.(sops.TreeBranch), trailingComments)
+			}
 			target := state.targetForKey(path[:len(path)-1])
 			appendComments(target, pendingComments)
 			pendingComments = pendingComments[:0]
 			target.items = append(target.items, sops.TreeItem{Key: path[len(path)-1], Value: value})
-			appendComments(target, commentsFromSiblings(data, node.Next()))
+			appendComments(target, trailingComments)
 		case unstable.Table:
 			path, err := keyPath(node)
 			if err != nil {
@@ -247,6 +251,27 @@ func parseTOML(data []byte) (sops.TreeBranch, error) {
 	}
 	appendComments(state.scope, pendingComments)
 	return finalizeBranch(state.root), nil
+}
+
+// Inline tables are emitted as table sections, whose header comments live inside the table branch.
+func attachInlineTableHeaderComments(branch sops.TreeBranch, comments []sops.Comment) (sops.TreeBranch, []sops.Comment) {
+	var headerComments []sops.Comment
+	var remainingComments []sops.Comment
+	for _, comment := range comments {
+		if comment.Inline {
+			headerComments = append(headerComments, comment)
+		} else {
+			remainingComments = append(remainingComments, comment)
+		}
+	}
+	if len(headerComments) == 0 {
+		return branch, remainingComments
+	}
+	result := make(sops.TreeBranch, 0, len(headerComments)+len(branch))
+	for _, comment := range headerComments {
+		result = append(result, sops.TreeItem{Key: comment})
+	}
+	return append(result, branch...), remainingComments
 }
 
 func keyPath(node *unstable.Node) ([]string, error) {

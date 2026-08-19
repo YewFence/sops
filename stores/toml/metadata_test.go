@@ -222,6 +222,30 @@ values = [1, # array inline
 	assert.Equal(t, expected, loaded.Branches)
 }
 
+func TestRealCipherRoundTripDecryptsExpandedInlineTableComment(t *testing.T) {
+	store := &Store{}
+	branches, err := store.LoadPlainFile([]byte(`inline = { z = "first", a = "second" } # inline table comment
+`))
+	require.NoError(t, err)
+	tree := sops.Tree{Branches: branches}
+	key := bytes.Repeat([]byte("k"), 32)
+	cipher := aes.NewCipher()
+	_, err = tree.Encrypt(key, cipher)
+	require.NoError(t, err)
+	encryptedFile, err := store.EmitPlainFile(tree.Branches)
+	require.NoError(t, err)
+	assert.Contains(t, string(encryptedFile), "[inline] # ENC[")
+	loadedBranches, err := store.LoadPlainFile(encryptedFile)
+	require.NoError(t, err)
+	loaded := sops.Tree{Branches: loadedBranches}
+	_, err = loaded.Decrypt(key, cipher)
+	require.NoError(t, err)
+	decryptedFile, err := store.EmitPlainFile(loaded.Branches)
+	require.NoError(t, err)
+	assert.NotContains(t, string(decryptedFile), "ENC[")
+	assert.Contains(t, string(decryptedFile), "[inline] # inline table comment")
+}
+
 func TestEncryptedFileErrorsAndReservedKey(t *testing.T) {
 	store := &Store{}
 	_, err := store.LoadEncryptedFile([]byte("value = 1\n"))

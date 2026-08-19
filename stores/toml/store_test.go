@@ -152,6 +152,19 @@ func TestLoadPlainFilePreservesArrayAndInlineTableComments(t *testing.T) {
 	}, branches[0])
 }
 
+func TestLoadPlainFileAttachesInlineTableTrailingCommentToTable(t *testing.T) {
+	branches, err := (&Store{}).LoadPlainFile([]byte(`inline = { z = "first", a = "second" } # inline table comment
+`))
+	require.NoError(t, err)
+	assert.Equal(t, sops.TreeBranch{
+		{Key: "inline", Value: sops.TreeBranch{
+			{Key: sops.Comment{Value: "inline table comment", Inline: true}},
+			{Key: "z", Value: "first"},
+			{Key: "a", Value: "second"},
+		}},
+	}, branches[0])
+}
+
 func TestLoadPlainFilePreservesTablesAndArraysOfTables(t *testing.T) {
 	input := []byte(`# first section
 [a.b] # b header
