@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/getsops/sops/v3"
-	"github.com/getsops/sops/v3/aes"
+	"github.com/YewFence/sops/v3"
+	"github.com/YewFence/sops/v3/aes"
 )
 
 // TestMACWithCommentInSequence is a regression test for getsops/sops#2243.

@@ -3,8 +3,8 @@ package common
 import (
 	"testing"
 
-	"github.com/getsops/sops/v3/cmd/sops/formats"
-	"github.com/getsops/sops/v3/config"
+	"github.com/YewFence/sops/v3/cmd/sops/formats"
+	"github.com/YewFence/sops/v3/config"
 	"github.com/stretchr/testify/assert"
 )
 

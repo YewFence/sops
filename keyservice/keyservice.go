@@ -7,14 +7,14 @@ package keyservice
 import (
 	"fmt"
 
-	"github.com/getsops/sops/v3/age"
-	"github.com/getsops/sops/v3/azkv"
-	"github.com/getsops/sops/v3/gcpkms"
-	"github.com/getsops/sops/v3/hckms"
-	"github.com/getsops/sops/v3/hcvault"
-	"github.com/getsops/sops/v3/keys"
-	"github.com/getsops/sops/v3/kms"
-	"github.com/getsops/sops/v3/pgp"
+	"github.com/YewFence/sops/v3/age"
+	"github.com/YewFence/sops/v3/azkv"
+	"github.com/YewFence/sops/v3/gcpkms"
+	"github.com/YewFence/sops/v3/hckms"
+	"github.com/YewFence/sops/v3/hcvault"
+	"github.com/YewFence/sops/v3/keys"
+	"github.com/YewFence/sops/v3/kms"
+	"github.com/YewFence/sops/v3/pgp"
 )
 
 // KeyFromMasterKey converts a SOPS internal MasterKey to an RPC Key that can be serialized with Protocol Buffers

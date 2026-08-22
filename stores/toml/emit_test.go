@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/getsops/sops/v3"
+	"github.com/YewFence/sops/v3"
 	tomllib "github.com/pelletier/go-toml/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

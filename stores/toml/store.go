@@ -1,11 +1,11 @@
-package toml //import "github.com/getsops/sops/v3/stores/toml"
+package toml //import "github.com/YewFence/sops/v3/stores/toml"
 
 import (
 	"bytes"
 	"fmt"
 
-	"github.com/getsops/sops/v3"
-	"github.com/getsops/sops/v3/config"
+	"github.com/YewFence/sops/v3"
+	"github.com/YewFence/sops/v3/config"
 	toml "github.com/pelletier/go-toml/v2"
 	"github.com/pelletier/go-toml/v2/unstable"
 )

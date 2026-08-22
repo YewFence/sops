@@ -3,9 +3,9 @@ package groups
 import (
 	"os"
 
-	"github.com/getsops/sops/v3"
-	"github.com/getsops/sops/v3/cmd/sops/common"
-	"github.com/getsops/sops/v3/keyservice"
+	"github.com/YewFence/sops/v3"
+	"github.com/YewFence/sops/v3/cmd/sops/common"
+	"github.com/YewFence/sops/v3/keyservice"
 )
 
 // AddOpts are the options for adding a key group to a SOPS file

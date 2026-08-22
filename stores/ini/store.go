@@ -1,4 +1,4 @@
-package ini //import "github.com/getsops/sops/v3/stores/ini"
+package ini //import "github.com/YewFence/sops/v3/stores/ini"
 
 import (
 	"bytes"
@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/getsops/sops/v3"
-	"github.com/getsops/sops/v3/config"
-	"github.com/getsops/sops/v3/stores"
+	"github.com/YewFence/sops/v3"
+	"github.com/YewFence/sops/v3/config"
+	"github.com/YewFence/sops/v3/stores"
 	"gopkg.in/ini.v1"
 )
 

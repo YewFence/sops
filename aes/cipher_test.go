@@ -10,7 +10,7 @@ import (
 	"testing/quick"
 	"time"
 
-	"github.com/getsops/sops/v3"
+	"github.com/YewFence/sops/v3"
 	toml "github.com/pelletier/go-toml/v2"
 	"github.com/stretchr/testify/assert"
 )

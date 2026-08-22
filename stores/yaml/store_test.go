@@ -3,8 +3,8 @@ package yaml
 import (
 	"testing"
 
-	"github.com/getsops/sops/v3"
-	"github.com/getsops/sops/v3/config"
+	"github.com/YewFence/sops/v3"
+	"github.com/YewFence/sops/v3/config"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -19,7 +19,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/getsops/sops/v3/logging"
+	"github.com/YewFence/sops/v3/logging"
 	"github.com/google/shlex"
 )
 

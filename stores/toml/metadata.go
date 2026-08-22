@@ -3,8 +3,8 @@ package toml
 import (
 	"fmt"
 
-	"github.com/getsops/sops/v3"
-	"github.com/getsops/sops/v3/stores"
+	"github.com/YewFence/sops/v3"
+	"github.com/YewFence/sops/v3/stores"
 )
 
 var _ sops.Store = (*Store)(nil)

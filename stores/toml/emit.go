@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/getsops/sops/v3"
+	"github.com/YewFence/sops/v3"
 	toml "github.com/pelletier/go-toml/v2"
 	"github.com/pelletier/go-toml/v2/unstable/edit"
 )

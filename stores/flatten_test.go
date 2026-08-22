@@ -3,7 +3,7 @@ package stores
 import (
 	"testing"
 
-	"github.com/getsops/sops/v3"
+	"github.com/YewFence/sops/v3"
 	"github.com/stretchr/testify/assert"
 )
 

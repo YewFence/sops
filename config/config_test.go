@@ -6,7 +6,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/getsops/sops/v3/keys"
+	"github.com/YewFence/sops/v3/keys"
 	"github.com/stretchr/testify/assert"
 )
 
